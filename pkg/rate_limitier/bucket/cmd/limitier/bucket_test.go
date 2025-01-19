@@ -34,3 +34,33 @@ func TestNewBucketLimiter(t *testing.T) {
 		}
 	}
 }
+
+func TestRequestNewBucket(t *testing.T) {
+	bl, err := NewBucketLimiter(60, 80)
+	if err != nil {
+		t.Error(err)
+	}
+
+	isAllowed := bl.RequestToken("keya")
+	if !isAllowed {
+		t.Error("expected to be allowed")
+	}
+}
+
+func TestRequestNotAllowd(t *testing.T) {
+	bl, err := NewBucketLimiter(1, 1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	isAllowed := bl.RequestToken("keya")
+	if !isAllowed {
+		t.Error("expected to be allowd")
+	}
+
+	isAllowed = bl.RequestToken("keya")
+	if isAllowed {
+		t.Error("expected to be denied")
+	}
+
+}
