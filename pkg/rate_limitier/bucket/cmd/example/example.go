@@ -9,7 +9,7 @@ import (
 
 
 func main()  {
-	refillRateMinute := 60
+	refillRateMinute := 30
 	size := 15
 	key := "app"
 
@@ -20,9 +20,9 @@ func main()  {
 
 	for range 500 {
 		if ok := bl.RequestToken(key); ok {
-			log.Printf("\nrequest being served, %d tokens remaining", bl.GetCurrentUnits(key))
+			log.Printf("request being served, %d tokens remaining", bl.GetCurrentUnits(key))
 		}else{
-			log.Printf("\nrequest denied, %d tokens remaining", bl.GetCurrentUnits(key))
+			log.Printf("request denied, %d tokens remaining", bl.GetCurrentUnits(key))
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
