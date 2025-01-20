@@ -74,7 +74,7 @@ func TestRefillReachTop(t *testing.T) {
 
 	b := bucket{
 		key:          "a",
-		lastRefilled:     time.Now(),
+		lastRefilled: time.Now(),
 		currentUnits: 1,
 		mutex:        sync.Mutex{},
 	}
@@ -95,12 +95,31 @@ func TestPartialRefill(t *testing.T) {
 
 	b := bucket{
 		key:          "a",
-		lastRefilled:     time.Now(),
+		lastRefilled: time.Now(),
 		currentUnits: currUnit,
 		mutex:        sync.Mutex{},
 	}
 
-	b.refill(time.Now().Add(time.Duration(elapsedSeconds)* time.Second), top, refillRate)
+	b.refill(time.Now().Add(time.Duration(elapsedSeconds)*time.Second), top, refillRate)
+	if b.currentUnits != expected {
+		t.Errorf("\nExpected: %d Found: %d", expected, b.currentUnits)
+	}
+}
+
+func TestSmallReffil(t *testing.T) {
+	top := 10
+	refillRate := 30 // 0.5 unit per second
+	currUnit := 0
+	expected := 3
+
+	b := bucket{
+		key:          "a",
+		lastRefilled: time.Now(),
+		currentUnits: currUnit,
+		mutex:        sync.Mutex{},
+	}
+
+	b.refill(time.Now().Add(6*time.Second), top, refillRate)
 	if b.currentUnits != expected {
 		t.Errorf("\nExpected: %d Found: %d", expected, b.currentUnits)
 	}

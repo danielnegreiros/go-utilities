@@ -28,7 +28,7 @@ type bucket struct {
 // avoiding long running term routine
 func (b *bucket) refill(nowTime time.Time, size int, rate int) error {
 	elaspsed := nowTime.Sub(b.lastRefilled).Seconds()
-	secRate := float64(rate / 60)
+	secRate := float64(rate) / 60
 
 	refill := int(elaspsed * secRate)
 
