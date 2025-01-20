@@ -1,7 +1,9 @@
-package main
+package limiter
 
 import (
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestNewBucketLimiter(t *testing.T) {
@@ -63,4 +65,43 @@ func TestRequestNotAllowd(t *testing.T) {
 		t.Error("expected to be denied")
 	}
 
+}
+
+func TestRefillReachTop(t *testing.T) {
+
+	top := 11
+	refillRate := 60 // 1 unit per second
+
+	b := bucket{
+		key:          "a",
+		lastRefilled:     time.Now(),
+		currentUnits: 1,
+		mutex:        sync.Mutex{},
+	}
+
+	b.refill(time.Now().Add(15*time.Second), top, refillRate)
+	if b.currentUnits != top {
+		t.Errorf("\nExpected: %d Found: %d", top, b.currentUnits)
+	}
+
+}
+
+func TestPartialRefill(t *testing.T) {
+	top := 1000
+	refillRate := 120 // 2 unit per second
+	currUnit := 10
+	elapsedSeconds := 15
+	expected := currUnit + (2 * elapsedSeconds)
+
+	b := bucket{
+		key:          "a",
+		lastRefilled:     time.Now(),
+		currentUnits: currUnit,
+		mutex:        sync.Mutex{},
+	}
+
+	b.refill(time.Now().Add(time.Duration(elapsedSeconds)* time.Second), top, refillRate)
+	if b.currentUnits != expected {
+		t.Errorf("\nExpected: %d Found: %d", expected, b.currentUnits)
+	}
 }

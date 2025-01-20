@@ -1,4 +1,4 @@
-package main
+package limiter
 
 import (
 	"errors"
@@ -19,25 +19,30 @@ type bucketLimiter struct {
 type bucket struct {
 	key          string
 	currentUnits int
-	lastSeen     time.Time
+	lastRefilled time.Time
 	mutex        sync.Mutex
 }
 
 // refill increses current units if they are available
 // this operation happens on a request level
 // avoiding long running term routine
-func (b *bucket) refill(nowTime time.Time, top int, rate int) error {
-	elaspsed := int(nowTime.Sub(b.lastSeen).Seconds())
+func (b *bucket) refill(nowTime time.Time, size int, rate int) error {
+	elaspsed := int(nowTime.Sub(b.lastRefilled).Seconds())
 	secRate := rate / 60
 
 	refill := elaspsed * secRate
 
-	if b.currentUnits + refill >= top {
-		b.currentUnits = top
+	if b.currentUnits+refill >= size {
+		b.currentUnits = size
+		return nil
+	}
+
+	if refill == 0 {
 		return nil
 	}
 
 	b.currentUnits += refill
+	b.lastRefilled = nowTime
 	return nil
 }
 
@@ -69,7 +74,8 @@ func (bl *bucketLimiter) RequestToken(key string) bool {
 		bl.buckets[key] = bucket
 	}
 
-	bucket.refill(time.Now(), bl.size, bl.refillRateMinute)
+	now := time.Now()
+	bucket.refill(now, bl.size, bl.refillRateMinute)
 
 	if bucket.currentUnits == 0 {
 		return false
@@ -85,7 +91,15 @@ func (bl *bucketLimiter) createBucket(key string) *bucket {
 	return &bucket{
 		key:          key,
 		currentUnits: bl.size,
-		lastSeen:     time.Now(),
+		lastRefilled: time.Now(),
 		mutex:        sync.Mutex{},
 	}
+}
+
+func (bl *bucketLimiter) GetCurrentUnits(key string) int {
+	if v, ok := bl.buckets[key]; ok {
+		return v.currentUnits
+	}
+
+	return -1
 }
