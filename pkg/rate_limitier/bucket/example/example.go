@@ -9,7 +9,7 @@ import (
 
 
 func main()  {
-	refillRateMinute := 60
+	refillRateMinute := 30
 	size := 15
 	key := "app"
 
